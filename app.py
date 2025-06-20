@@ -3,8 +3,9 @@ import pandas as pd
 import snowflake.snowpark as sp
 import re
 
-# Start Snowflake session
-session = sp.Session.builder.getOrCreate()
+# Use secrets to connect to Snowflake
+connection_parameters = st.secrets["snowflake"]
+session = sp.Session.builder.configs(connection_parameters).create()
 
 # Load table into DataFrame
 df = session.table("DEMOS.GEDS.GEDS_SHORT").to_pandas()
