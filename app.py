@@ -5,24 +5,25 @@ import pandas as pd
 import snowflake.snowpark as sp
 import re
 
-# Save private key to a temp file manually
+# === Write private key to a known temp file path ===
 key_path = os.path.join(tempfile.gettempdir(), "snowflake_key.p8")
 with open(key_path, "w") as f:
     f.write(st.secrets["snowflake"]["private_key"])
 
-# Snowflake connection config using key pair
+# === Explicit connection config (no password included) ===
 connection_parameters = {
     "user": st.secrets["snowflake"]["user"],
-    "private_key_path": key_path,
     "account": st.secrets["snowflake"]["account"],
+    "private_key_path": key_path,
     "warehouse": st.secrets["snowflake"]["warehouse"],
     "database": st.secrets["snowflake"]["database"],
     "schema": st.secrets["snowflake"]["schema"],
-    "role": st.secrets["snowflake"]["role"]
+    "role": st.secrets["snowflake"]["role"],
+    # ❌ Do not include password
 }
 
-# Create the session
 session = sp.Session.builder.configs(connection_parameters).create()
+
 
 
 session.sql("USE DATABASE DEMOS").collect()
