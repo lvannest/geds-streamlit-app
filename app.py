@@ -3,18 +3,32 @@ import pandas as pd
 import snowflake.snowpark as sp
 import re
 
-# === Snowflake connection using Streamlit secrets ===
+import tempfile
+import os
+
+# Write the private key to a temp file
+private_key = st.secrets["snowflake"]["private_key"]
+with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".p8") as tmp_key_file:
+    tmp_key_file.write(private_key)
+    private_key_path = tmp_key_file.name
+
+# Explicitly close and flush
+tmp_key_file.flush()
+os.fsync(tmp_key_file.fileno())
+
+# Connect using key pair
 connection_parameters = {
     "user": st.secrets["snowflake"]["user"],
-    "password": st.secrets["snowflake"]["password"],
-    "account": st.secrets["snowflake"]["account"],  # e.g., "BL04345"
+    "private_key_path": private_key_path,
+    "account": st.secrets["snowflake"]["account"],
     "warehouse": st.secrets["snowflake"]["warehouse"],
     "database": st.secrets["snowflake"]["database"],
     "schema": st.secrets["snowflake"]["schema"],
-    "role": st.secrets["snowflake"]["role"],
+    "role": st.secrets["snowflake"]["role"]
 }
 
 session = sp.Session.builder.configs(connection_parameters).create()
+
 session.sql("USE DATABASE DEMOS").collect()
 session.sql("USE SCHEMA GEDS").collect()
 # === Load data ===
