@@ -3,14 +3,23 @@ import pandas as pd
 import snowflake.snowpark as sp
 import re
 
-# Use secrets to connect to Snowflake
-connection_parameters = st.secrets["snowflake"]
+# === Snowflake connection using Streamlit secrets ===
+connection_parameters = {
+    "user": st.secrets["snowflake"]["user"],
+    "password": st.secrets["snowflake"]["password"],
+    "account": st.secrets["snowflake"]["account"],  # e.g., "BL04345"
+    "warehouse": st.secrets["snowflake"]["warehouse"],
+    "database": st.secrets["snowflake"]["database"],
+    "schema": st.secrets["snowflake"]["schema"],
+    "role": st.secrets["snowflake"]["role"],
+}
+
 session = sp.Session.builder.configs(connection_parameters).create()
 
-# Load table into DataFrame
+# === Load data ===
 df = session.table("DEMOS.GEDS.GEDS_SHORT").to_pandas()
 
-# Sidebar - Filters
+# === Sidebar Filters ===
 st.sidebar.header("Filter Options")
 
 # Reset filters button
@@ -57,7 +66,7 @@ selected_org = st.sidebar.selectbox("Organization Name", org_names)
 # Email checkbox
 has_email = st.sidebar.checkbox("📧 Only show entries with an email address", value=False)
 
-# Search Organization Structure
+# Organization Structure Search
 st.sidebar.header("🔠 Search Organization Structure")
 search1 = st.sidebar.text_input("Search term 1")
 search2 = search3 = ""
@@ -66,7 +75,7 @@ if search1:
     if search2:
         search3 = st.sidebar.text_input("Search term 3 (optional)")
 
-# Search Job Title
+# Job Title Search
 st.sidebar.header("🔠 Search Job Title (TITLE_EN)")
 title_search1 = st.sidebar.text_input("Title search term 1")
 title_search2 = title_search3 = ""
@@ -81,10 +90,10 @@ search_mode = st.sidebar.radio("Search Mode", ["AND", "OR"], horizontal=True)
 # Global search
 global_search = st.sidebar.text_input("🌐 Global Search (All Columns)")
 
-# Title
+# === Page title ===
 st.title("GEDS Organizational Structure Explorer")
 
-# Apply filters
+# === Apply filters ===
 filter_applied = (
     selected_dept_acr != "All" or selected_dept != "All" or 
     selected_org_acr != "All" or selected_org != "All" or 
@@ -133,6 +142,7 @@ else:
         mask = filtered_df.apply(lambda row: row.astype(str).str.contains(pattern, case=False, na=False).any(), axis=1)
         filtered_df = filtered_df[mask]
 
+    # Display results
     if len(filtered_df) > 100000:
         st.warning(f"{len(filtered_df)} results found. Please refine your search to fewer than 100,000 rows.")
     elif len(filtered_df) == 0:
