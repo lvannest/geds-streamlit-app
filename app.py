@@ -27,6 +27,9 @@ session = sp.Session.builder.configs(connection_parameters).create()
 
 session.sql("USE DATABASE DEMOS").collect()
 session.sql("USE SCHEMA GEDS").collect()
+st.write("✅ Connected as:", session.sql("SELECT CURRENT_USER(), CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA()").collect())
+st.write("📋 Tables in DEMOS.GEDS:", session.sql("SHOW TABLES IN DEMOS.GEDS").collect())
+
 # === Load data ===
 df = session.table("DEMOS.GEDS.GEDS_SHORT").to_pandas()
 
