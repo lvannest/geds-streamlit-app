@@ -34,6 +34,21 @@ connection_parameters = {
 
 # Establish session
 session = sp.Session.builder.configs(connection_parameters).create()
+st.success("✅ Connected to Snowflake!")
+
+# Check session info
+st.write(session.sql("SELECT CURRENT_USER(), CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA()").collect())
+
+# Check table availability
+tables = session.sql("SHOW TABLES IN DEMOS.GEDS").collect()
+st.write("📋 Tables in DEMOS.GEDS:", tables)
+
+# Try to preview a few rows
+try:
+    df = session.table("GEDS_SHORT").limit(5).to_pandas()
+    st.write("📄 Sample data from GEDS_SHORT:", df)
+except Exception as e:
+    st.error(f"❌ Error reading table: {e}")
 
 
 # ✅ Confirm session identity and access
