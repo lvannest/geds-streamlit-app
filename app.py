@@ -24,6 +24,13 @@ connection_parameters = {
 
 session = sp.Session.builder.configs(connection_parameters).create()
 
+# ✅ Confirm session identity and access
+st.success("🔐 Connected to Snowflake!")
+st.write(session.sql("SELECT CURRENT_USER(), CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA()").collect())
+
+# ✅ Check for the target table
+tables = session.sql("SHOW TABLES IN DEMOS.GEDS").collect()
+st.write("📋 Tables in DEMOS.GEDS:", tables)
 
 
 session.sql("USE DATABASE DEMOS").collect()
