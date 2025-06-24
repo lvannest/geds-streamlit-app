@@ -1,28 +1,40 @@
-import os
-import tempfile
 import streamlit as st
-import pandas as pd
 import snowflake.snowpark as sp
-import re
+import base64
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
 
-# === Write private key to a known temp file path ===
-key_path = os.path.join(tempfile.gettempdir(), "snowflake_key.p8")
-with open(key_path, "w") as f:
-    f.write(st.secrets["snowflake"]["private_key"])
+# Load private key from secrets
+p_key = st.secrets["snowflake"]["private_key"]
 
-# === Explicit connection config (no password included) ===
+# Load private key object
+private_key_obj = serialization.load_pem_private_key(
+    p_key.encode(),
+    password=None,
+    backend=default_backend()
+)
+
+# Convert private key to DER format and base64 encode
+pkb = private_key_obj.private_bytes(
+    encoding=serialization.Encoding.DER,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
+)
+
+# Define connection parameters
 connection_parameters = {
-    "user": st.secrets["snowflake"]["user"],
     "account": st.secrets["snowflake"]["account"],
-    "private_key_path": key_path,
+    "user": st.secrets["snowflake"]["user"],
+    "private_key": pkb,
+    "role": st.secrets["snowflake"]["role"],
     "warehouse": st.secrets["snowflake"]["warehouse"],
     "database": st.secrets["snowflake"]["database"],
-    "schema": st.secrets["snowflake"]["schema"],
-    "role": st.secrets["snowflake"]["role"],
-    # ❌ Do not include password
+    "schema": st.secrets["snowflake"]["schema"]
 }
 
+# Establish session
 session = sp.Session.builder.configs(connection_parameters).create()
+
 
 # ✅ Confirm session identity and access
 st.success("🔐 Connected to Snowflake!")
