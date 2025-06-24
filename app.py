@@ -15,7 +15,8 @@ connection_parameters = {
 }
 
 session = sp.Session.builder.configs(connection_parameters).create()
-
+session.sql("USE DATABASE DEMOS").collect()
+session.sql("USE SCHEMA GEDS").collect()
 # === Load data ===
 df = session.table("DEMOS.GEDS.GEDS_SHORT").to_pandas()
 
